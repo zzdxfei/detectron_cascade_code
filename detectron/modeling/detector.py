@@ -234,12 +234,15 @@ class DetectionModelHelper(cnn.CNNModelHelper):
         """Op for decoding bboxes. Only support class-agnostic bbox regression.
         by Zhaowei Cai for Cascade R-CNN
 
+        # 仅支持类别无关的包围盒回归
+
         blobs_in:
           - 'bbox_pred_<j>': 2D tensor of shape (R, 4 * 2) of predicted deltas
             for transformation previous boxes into next boxes, at stage j.
           - 'rois_<j>': 2D tensor of shape (R, 5), for proposals where the
             five columns encode [batch ind, x1, y1, x2, y2], at stage j.
 
+        # 为了去除ground truth
         If used during training, then the input blobs will also include:
           [mapped_gt_boxes_<j>], which is used to remove redundant ground truth.
 
@@ -256,6 +259,8 @@ class DetectionModelHelper(cnn.CNNModelHelper):
     def DistributeCascadeProposals(self, stage):
         """Distribute proposals to their appropriate FPN levels.
         by Zhaowei Cai for Cascade R-CNN
+
+        将proposals映射到合适的fpn层
 
         Input blobs:
           - proposals_<j> are the decoded proposals from stage j; see

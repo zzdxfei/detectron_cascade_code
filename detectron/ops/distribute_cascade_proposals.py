@@ -57,6 +57,8 @@ class DistributeCascadeProposalsOp(object):
                 self._stage
             )
             blobs = {k: [] for k in output_blob_names}
+
+            # 进行rois映射到了合适的fpn层， 并重新进行采样构成训练数据
             cascade_rcnn_roi_data.add_cascade_rcnn_blobs(
                 blobs, im_scales, roidb, self._stage
             )

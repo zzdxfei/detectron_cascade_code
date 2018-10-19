@@ -31,19 +31,25 @@ class BBoxAccuracyOp(object):
         """See modeling.detector.AddBBoxAccuracy for inputs/outputs
         documentation.
         """
-
+        # 包围盒偏移量
         # predicted bbox deltas
         bbox_deltas = inputs[0].data
+
         # proposals
+        # rois
         bbox_data = inputs[1].data
         assert bbox_data.shape[1] == 5
+
+        # [batch ind, x1, y1, x2, y2]
         bbox_prior = bbox_data[:, 1:]
+
         # labels
         labels = inputs[2].data
+
         # mapped gt boxes
         mapped_gt_boxes = inputs[3].data
         gt_boxes = mapped_gt_boxes[:, :4]
-        max_overlap = mapped_gt_boxes[:, 4]
+        max_overlap = mapped_gt_boxes[:, 4]  # 标识是否是gt boxes
 
         # bbox iou only for fg and non-gt boxes
         keep_inds = np.where((labels > 0) & (max_overlap < 1.0))[0]
@@ -55,8 +61,10 @@ class BBoxAccuracyOp(object):
         max_overlap = max_overlap[keep_inds]
 
         if cfg.MODEL.CLS_AGNOSTIC_BBOX_REG or num_boxes == 0:
+            # 默认采用这种方式
             bbox_deltas = bbox_deltas[:, -4:]
         else:
+            # 根据对应的类别取出回归量
             bbox_deltas = np.vstack(
                 [
                     bbox_deltas[i, labels[i] * 4: labels[i] * 4 + 4]
@@ -67,7 +75,8 @@ class BBoxAccuracyOp(object):
             bbox_prior, bbox_deltas, self._bbox_reg_weights
         )
 
-        avg_iou = 0.
+        avg_iou = 0.  # 新的iou的和
+        # 没进行包围盒回归前的iou
         pre_avg_iou = sum(max_overlap)
         for i in range(num_boxes):
             gt_box = gt_boxes[i, :]

@@ -35,13 +35,17 @@ class DecodeBBoxesOp(object):
         bbox_deltas = inputs[0].data
         assert cfg.MODEL.CLS_AGNOSTIC_BBOX_REG
         assert bbox_deltas.shape[1] == 8
+        # 包围盒回归量
         bbox_deltas = bbox_deltas[:, -4:]
+
+        # rois
         bbox_data = inputs[1].data
         assert bbox_data.shape[1] == 5
         batch_inds = bbox_data[:, :1]
         bbox_prior = bbox_data[:, 1:]
 
         # Transform bbox priors into proposals via bbox transformations
+        # 添加回归量
         bbox_decode = box_utils.bbox_transform(
             bbox_prior, bbox_deltas, self._bbox_reg_weights
         )
@@ -50,11 +54,13 @@ class DecodeBBoxesOp(object):
         # truth boxes during training
         if len(inputs) > 2:
             mapped_gt_boxes = inputs[2].data
+            # 用于判定哪些是gt
             max_overlap = mapped_gt_boxes[:, 4]
             keep = _filter_boxes(bbox_decode, max_overlap)
             bbox_decode = bbox_decode[keep, :]
             batch_inds = batch_inds[keep, :]
 
+        # 得到添加了回归量的box
         bbox_decode = np.hstack((batch_inds, bbox_decode))
         outputs[0].reshape(bbox_decode.shape)
         outputs[0].data[...] = bbox_decode
